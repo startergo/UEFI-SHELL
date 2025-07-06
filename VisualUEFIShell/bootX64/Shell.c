@@ -4,8 +4,9 @@
   Copyright (c) 2009 - 2019, Intel Corporation. All rights reserved.<BR>
   (C) Copyright 2013-2014 Hewlett-Packard Development Company, L.P.<BR>
   Copyright 2015-2018 Dell Technologies.<BR>
-  SPDX-License-Identifier: BSD-2-Clause-Patent
+  Copyright (C) 2023, Apple Inc. All rights reserved.<BR>
 
+  SPDX-License-Identifier: BSD-2-Clause-Patent
 **/
 #define _CRT_SECURE_NO_WARNINGS
 #include "Shell.h"
@@ -628,6 +629,11 @@ UefiMain (
 
     Size       = 100;
     TempString = AllocateZeroPool (Size);
+    if (TempString == NULL) {
+      ASSERT (TempString != NULL);
+      Status = EFI_OUT_OF_RESOURCES;
+      goto FreeResources;
+    }
 
     UnicodeSPrint (TempString, Size, L"%d", PcdGet8 (PcdShellSupportLevel));
     Status = InternalEfiShellSetEnv (L"uefishellsupport", TempString, TRUE);
@@ -2725,7 +2731,7 @@ RunCommandOrFile (
           }
           if (0 == _wcsicmp(CmdLine, L"ver"))
           {
-              printf("\n    TORO UEFI SHELL with PLUGIN Extension, v%d.%d.%d Build %d\n    Based on \"edk2-stable202502\"\n\n", MAJORVER, MINORVER, PATCHVER, BUILDNUM);
+              printf("\n    TORO UEFI SHELL with PLUGIN Extension, v%d.%d.%d Build %d\n    Based on \"edk2-stable202505\"\n\n", MAJORVER, MINORVER, PATCHVER, BUILDNUM);
           }
       }
       break;
@@ -2748,10 +2754,15 @@ RunCommandOrFile (
         CommandWithPath = ShellFindFilePathEx (FirstParameter, mExecutableExtensions);
       }
 
+      if (CommandWithPath == NULL) {
       //
       // This should be impossible now.
       //
       ASSERT (CommandWithPath != NULL);
+        ShellPrintHiiEx (-1, -1, NULL, STRING_TOKEN (STR_SHELL_NOT_FOUND), ShellInfoObject.HiiHandle, FirstParameter);
+        SetLastError (SHELL_NOT_FOUND);
+        return EFI_NOT_FOUND;
+      }
 
       //
       // Make sure that path is not just a directory (or not found)
@@ -3598,8 +3609,8 @@ FindFirstCharacter (
   IN CONST CHAR16  EscapeCharacter
   )
 {
-  UINT32  WalkChar;
-  UINT32  WalkStr;
+  UINTN  WalkChar;
+  UINTN  WalkStr;
 
   for (WalkStr = 0; WalkStr < StrLen (String); WalkStr++) {
     if (String[WalkStr] == EscapeCharacter) {

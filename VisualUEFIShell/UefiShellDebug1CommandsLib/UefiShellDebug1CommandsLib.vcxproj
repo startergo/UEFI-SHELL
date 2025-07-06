@@ -88,6 +88,9 @@
     <ClInclude Include="..\..\EDK2\ShellPkg\Library\UefiShellDebug1CommandsLib\SmbiosView\SmbiosView.h" />
     <ClInclude Include="..\..\EDK2\ShellPkg\Library\UefiShellDebug1CommandsLib\UefiShellDebug1CommandsLib.h" />
   </ItemGroup>
+  <ItemGroup>
+    <None Include="..\..\EDK2\ShellPkg\Library\UefiShellDebug1CommandsLib\UefiShellDebug1CommandsLib.uni" />
+  </ItemGroup>
   <PropertyGroup Label="Globals">
     <VCProjectVersion>16.0</VCProjectVersion>
     <Keyword>Win32Proj</Keyword>

@@ -216,4 +216,7 @@
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>
+  <ItemGroup>
+    <None Include="..\..\EDK2\ShellPkg\Library\UefiShellDebug1CommandsLib\UefiShellDebug1CommandsLib.uni" />
+  </ItemGroup>
 </Project>
