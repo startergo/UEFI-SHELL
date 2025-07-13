@@ -15,3 +15,15 @@ hello.exe
 x64/
 .vs/
 $trash/
+
+# Development tools and downloads - should not be committed
+/MYDOWNLOADS/
+*.exe
+*.zip
+*.dll
+*.lib
+*.pdb
+
+# Build artifacts
+/EDK2/Build/
+/EDK2/Conf/.cache/

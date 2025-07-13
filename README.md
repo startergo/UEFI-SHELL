@@ -8,6 +8,7 @@ VIDEO: https://www.youtube.com/watch?v=wXTQ_wsKwHw
 * [Intention](README.md#intention)<br>
   * [Download](https://github.com/KilianKegel/Visual-UEFI-SHELL/tree/main/UEFIBinaries)<br>
 * [Goal](README.md#goal)<br>
+* [EFI 1.1 Compatibility](README.md#legacy-compatibility)<br>
 * [Approach](README.md#approach)<br> 
 * [Howto](README.md#howto)<br>
 * [Revision history](README.md#revision-history)<br>
@@ -49,6 +50,16 @@ Introduce **♉toro UEFI SHELL**, an improved *original* **Tianocore UEFI SHELL*
 	* just invoke `help` in the command line
 
 *This enables developers to speed up their **UEFI SHELL**-development tasks by factor x10 or more*
+
+### Legacy Compatibility:
+* **EFI 1.1 Support**: Full backward compatibility with EFI 1.1 shell applications
+* **Legacy Protocol Bridge**: Automatic detection and wrapper implementation for:
+  * `EFI_SHELL_INTERFACE_PROTOCOL` - Command-line arguments and I/O handles
+  * `EFI_SHELL_ENVIRONMENT_PROTOCOL` - Shell environment services  
+  * `EFI_SHELL_ENVIRONMENT2_PROTOCOL` - Extended environment compatibility
+* **Target Systems**: 2010 Mac Pro (cMP5,1), PowerMac G5, and other pre-UEFI 2.0 systems
+* **Framework HII**: Reduced dependency on modern HII infrastructure for older systems
+* **Graceful Degradation**: Maintains full functionality while supporting legacy environments
 
 ### Usage improvements:
 * add conventional MSDOS-style drive names **A:**, **B:**, **C:**, ...
@@ -103,6 +114,32 @@ to run **VS2022**
 5. **VS2022** directly creates a `BOOTX64.EFI` **UEFI SHELL** binary in its output directory `UEFIBinaries`
 
 ## Revision history
+### 20250713 v1.202505.1 build 81 - EFI 1.1 Legacy Protocol Support
+* **🎯 MAJOR FEATURE**: Comprehensive EFI 1.1 shell protocol support implementation
+* **Target Compatibility**: 2010 Mac Pro (cMP5,1) and other EFI 1.10 systems
+* **New Legacy Protocols**:
+  * `EFI_SHELL_INTERFACE_PROTOCOL` - Per-application command-line args and I/O handles
+  * `EFI_SHELL_ENVIRONMENT_PROTOCOL` - Global shell environment services
+  * `EFI_SHELL_ENVIRONMENT2_PROTOCOL` - Extended shell environment compatibility
+* **Technical Implementation**:
+  * Automatic EFI 1.1 environment detection
+  * Framework HII compatibility layer for older systems
+  * Wrapper-based approach preserving full UEFI 2.0+ functionality
+  * PCD configuration for legacy protocol enablement
+* **New Files**:
+  * `ShellLegacyProtocols.h` - EFI 1.1 protocol definitions
+  * `ShellLegacyProtocols.c` - Legacy protocol wrapper implementations
+  * `ShellLegacyTest.c` - EFI 1.1 protocol verification tool
+  * `EFI-1.1-Implementation.md` - Comprehensive implementation guide
+  * `build-efi11.cmd` - Custom build script for EFI 1.1 support
+* **Modified Core Files**:
+  * `Shell.c` - Removed EFI_UNSUPPORTED blocks, added legacy initialization
+  * `ShellProtocol.c` - Implemented ShellInterface protocol installation
+  * `ShellPkg.dsc` - Configured PCDs for legacy protocol support
+* **Backward Compatibility**: Enables modern UEFI Shell on 15+ year old EFI 1.1 systems
+* **Testing Framework**: Automated verification and manual testing procedures
+* **Documentation**: Complete implementation guide with deployment instructions
+
 ### 20250706 v1.202505.0 build 80
 * update to [**edk2-stable202505**](https://github.com/tianocore/edk2/releases/tag/edk2-stable202505)
 * update to **TORO C Library 20250706, v0.9.2 Build 289**
