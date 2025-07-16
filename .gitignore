@@ -27,3 +27,11 @@ $trash/
 # Build artifacts
 /EDK2/Build/
 /EDK2/Conf/.cache/
+
+# Isolated build workspaces (temporary environments)
+/BUILD-WORKSPACE/
+/VISUAL-BUILD-WORKSPACE/
+
+# macOS system files
+.DS_Store
+**/.DS_Store
