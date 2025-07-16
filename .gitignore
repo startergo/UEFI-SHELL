@@ -35,3 +35,7 @@ $trash/
 # macOS system files
 .DS_Store
 **/.DS_Store
+
+# Local build artifacts that shouldn't contaminate synced directories
+VisualUEFIShell/bootX64/AutoGen.h
+VisualUEFIShell/bootX64/AutoGen.c
