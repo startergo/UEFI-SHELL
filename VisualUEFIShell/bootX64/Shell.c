@@ -10,7 +10,6 @@
 **/
 #define _CRT_SECURE_NO_WARNINGS
 #include "Shell.h"
-#include "ShellLegacyProtocols.h"
 #define NCDETRACE/* REMOVE TO ENABLE TRACES */
 #include "VERSION.h"
 #include "BUILDNUM.h"
@@ -444,14 +443,14 @@ UefiMain (
   InitializeListHead (&ShellInfoObject.SplitList.Link);
 
   //
-  // Check PCDs for optional features that are now implemented for EFI 1.1 support.
-  // Legacy protocol support is now enabled.
+  // Check PCDs for optional features that are not implemented yet.
   //
-  if (!FeaturePcdGet (PcdShellRequireHiiPlatform)) {
-    //
-    // HII Platform support not required - this is OK for EFI 1.1
-    //
-    DEBUG ((DEBUG_INFO, "Shell: HII Platform support not required (EFI 1.1 mode)\n"));
+  if (  PcdGetBool (PcdShellSupportOldProtocols)
+     || !FeaturePcdGet (PcdShellRequireHiiPlatform)
+     || FeaturePcdGet (PcdShellSupportFrameworkHii)
+        )
+  {
+    return (EFI_UNSUPPORTED);
   }
 
   //
@@ -473,24 +472,16 @@ UefiMain (
     // If supporting EFI 1.1 we need to install HII protocol
     // only do this if PcdShellRequireHiiPlatform == FALSE
     //
-    // EFI 1.1 Framework HII support implementation
-    if (PcdGetBool (PcdShellSupportFrameworkHii) || IsEfi11Environment ()) {
-      DEBUG ((DEBUG_INFO, "Shell: Framework HII support enabled for EFI 1.1 compatibility\n"));
-      // Framework HII is simpler - we'll manage without complex HII for basic shell functionality
-    }
+    // remove EFI_UNSUPPORTED check above when complete.
+    /// @todo add support for Framework HII
 
     //
     // install our (solitary) HII package
     //
     ShellInfoObject.HiiHandle = HiiAddPackages (&gEfiCallerIdGuid, gImageHandle, ShellStrings, NULL);
     if (ShellInfoObject.HiiHandle == NULL) {
-      if (PcdGetBool (PcdShellSupportFrameworkHii) || IsEfi11Environment ()) {
-        //
-        // For EFI 1.1 compatibility, we can operate without HII packages
-        // Create a minimal HII handle for compatibility
-        //
-        DEBUG ((DEBUG_INFO, "Shell: Operating in EFI 1.1 mode without HII packages\n"));
-        ShellInfoObject.HiiHandle = (EFI_HII_HANDLE) 1; // Dummy handle for compatibility
+      if (PcdGetBool (PcdShellSupportFrameworkHii)) {
+        /// @todo Add our package into Framework HII
       }
 
       if (ShellInfoObject.HiiHandle == NULL) {
@@ -512,19 +503,6 @@ UefiMain (
     Status = CreatePopulateInstallShellProtocol (&ShellInfoObject.NewEfiShellProtocol);
     ASSERT_EFI_ERROR (Status);
     ASSERT (ShellInfoObject.NewEfiShellProtocol != NULL);
-
-    //
-    // Initialize legacy EFI 1.1 protocol support
-    //
-    if (PcdGetBool (PcdShellSupportOldProtocols) || IsEfi11Environment ()) {
-      DEBUG ((DEBUG_INFO, "Shell: Initializing EFI 1.1 legacy protocol support\n"));
-      Status = InstallShellEnvironmentProtocol ();
-      if (EFI_ERROR (Status)) {
-        DEBUG ((DEBUG_WARN, "Shell: Failed to install legacy protocols - %r\n", Status));
-      } else {
-        DEBUG ((DEBUG_INFO, "Shell: Legacy protocols installed successfully\n"));
-      }
-    }
 
     //
     // Now initialize the shell library (it requires Shell Parameters protocol)
@@ -811,14 +789,6 @@ FreeResources:
     DEBUG_CODE (
       ShellInfoObject.NewEfiShellProtocol = NULL;
       );
-  }
-
-  //
-  // Cleanup legacy EFI 1.1 protocol support
-  //
-  if (PcdGetBool (PcdShellSupportOldProtocols) || IsEfi11Environment ()) {
-    DEBUG ((DEBUG_INFO, "Shell: Cleaning up EFI 1.1 legacy protocol support\n"));
-    CleanupLegacyShellSupport ();
   }
 
   if (!IsListEmpty (&ShellInfoObject.BufferToFreeList.Link)) {

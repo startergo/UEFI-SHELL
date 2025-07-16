@@ -10,7 +10,6 @@
 **/
 
 #include "Shell.h"
-#include "ShellLegacyProtocols.h"
 #define NCDETRACE/* REMOVE TO ENABLE TRACES */
 #define _CRT_SECURE_NO_WARNINGS
 #define _NO_CRT_STDIO_INLINE
@@ -1634,22 +1633,7 @@ InternalShellExecuteDevicePath (
     Status = gBS->InstallProtocolInterface (&NewHandle, &gEfiShellParametersProtocolGuid, EFI_NATIVE_INTERFACE, &ShellParamsProtocol);
     ASSERT_EFI_ERROR (Status);
 
-    //
-    // Initialize and install ShellInterface protocol on the new image for compatibility if PcdGetBool(PcdShellSupportOldProtocols)
-    //
-    if (PcdGetBool (PcdShellSupportOldProtocols) || IsEfi11Environment ()) {
-      DEBUG ((DEBUG_INFO, "Shell: Installing ShellInterface protocol for EFI 1.1 compatibility\n"));
-      Status = InstallShellInterfaceProtocol (
-                 NewHandle,
-                 ShellParamsProtocol.Argv,
-                 ShellParamsProtocol.Argc
-                 );
-      if (EFI_ERROR (Status)) {
-        DEBUG ((DEBUG_WARN, "Shell: Failed to install ShellInterface protocol - %r\n", Status));
-      } else {
-        DEBUG ((DEBUG_INFO, "Shell: ShellInterface protocol installed successfully\n"));
-      }
-    }
+    /// @todo initialize and install ShellInterface protocol on the new image for compatibility if - PcdGetBool(PcdShellSupportOldProtocols)
 
     //
     // now start the image and if the caller wanted the return code pass it to them...
@@ -3912,21 +3896,9 @@ CreatePopulateInstallShellProtocol (
                     );
   }
 
-  if (PcdGetBool (PcdShellSupportOldProtocols) || IsEfi11Environment ()) {
-    //
-    // Support ShellEnvironment2 protocol for EFI 1.1 compatibility
-    //
-    DEBUG ((DEBUG_INFO, "Shell: Installing ShellEnvironment protocols for EFI 1.1 compatibility\n"));
-    Status = InstallShellEnvironmentProtocol ();
-    if (EFI_ERROR (Status)) {
-      DEBUG ((DEBUG_WARN, "Shell: Failed to install ShellEnvironment protocols - %r\n", Status));
-    } else {
-      DEBUG ((DEBUG_INFO, "Shell: ShellEnvironment protocols installed successfully\n"));
-    }
-    
-    //
-    // We support both ShellEnvironment and ShellEnvironment2 for maximum compatibility
-    //
+  if (PcdGetBool (PcdShellSupportOldProtocols)) {
+    /// @todo support ShellEnvironment2
+    /// @todo do we need to support ShellEnvironment (not ShellEnvironment2) also?
   }
 
   if (!EFI_ERROR (Status)) {
