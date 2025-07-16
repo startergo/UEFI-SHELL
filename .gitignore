@@ -36,6 +36,6 @@ $trash/
 .DS_Store
 **/.DS_Store
 
-# Local build artifacts that shouldn't contaminate synced directories
-VisualUEFIShell/bootX64/AutoGen.h
-VisualUEFIShell/bootX64/AutoGen.c
+# Prevent EDK2 contamination from EFI 1.1 development
+EDK2/ShellPkg/Application/Shell/ShellLegacyProtocols.h
+EDK2/ShellPkg/Application/Shell/ShellLegacyProtocols.c
