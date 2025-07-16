@@ -9,6 +9,7 @@ VIDEO: https://www.youtube.com/watch?v=wXTQ_wsKwHw
   * [Download](https://github.com/KilianKegel/Visual-UEFI-SHELL/tree/main/UEFIBinaries)<br>
 * [Goal](README.md#goal)<br>
 * [EFI 1.1 Compatibility](README.md#legacy-compatibility)<br>
+* [Build Approaches](README.md#build-approaches)<br>
 * [Approach](README.md#approach)<br> 
 * [Howto](README.md#howto)<br>
 * [Revision history](README.md#revision-history)<br>
@@ -53,6 +54,10 @@ Introduce **♉toro UEFI SHELL**, an improved *original* **Tianocore UEFI SHELL*
 
 ### Legacy Compatibility:
 * **EFI 1.1 Support**: Full backward compatibility with EFI 1.1 shell applications
+* **Complete Integration**: VisualUEFIShell now includes full EFI 1.1 support with:
+  * `Shell.c` - Main shell with EFI 1.1 initialization calls
+  * `ShellProtocol.c` - Shell protocol with EFI 1.1 support
+  * `ShellLegacyProtocols.c` - Complete EFI 1.1 protocol implementations
 * **Legacy Protocol Bridge**: Automatic detection and wrapper implementation for:
   * `EFI_SHELL_INTERFACE_PROTOCOL` - Command-line arguments and I/O handles
   * `EFI_SHELL_ENVIRONMENT_PROTOCOL` - Shell environment services  
@@ -60,6 +65,7 @@ Introduce **♉toro UEFI SHELL**, an improved *original* **Tianocore UEFI SHELL*
 * **Target Systems**: 2010 Mac Pro (cMP5,1), PowerMac G5, and other pre-UEFI 2.0 systems
 * **Framework HII**: Reduced dependency on modern HII infrastructure for older systems
 * **Graceful Degradation**: Maintains full functionality while supporting legacy environments
+* **Cross-Platform Support**: Same EFI 1.1 implementation available through both EDK2 and VisualUEFIShell builds
 
 ### Usage improvements:
 * add conventional MSDOS-style drive names **A:**, **B:**, **C:**, ...
@@ -101,7 +107,73 @@ The Enterprise Windows Driver Kit (Enterprise WDK) is a command-line build envir
 
 The Enterprise WDK contains the necessary elements to build drivers and basic Win32 driver test applications. Use your favorite code editor to modify source code and project files. Because it is command-line based, the Enterprise WDK does lack some of the features incorporated into Visual Studio, such as an IDE, driver deployment and driver testing.
 
+## Build Approaches
+
+This project provides **multiple build approaches** to create EFI 1.1 compatible UEFI Shell binaries:
+
+### 1. **VisualUEFIShell Build (Windows)** ⭐ RECOMMENDED
+* **Complete EFI 1.1 Integration**: All EFI 1.1 files fully integrated into Visual Studio project
+* **Toro Shell Base**: Enhanced shell with Toro C Library + plugin system
+* **Visual Studio ONLY**: Compiles ONLY through Visual Studio (not EDK2 build)
+* **Enhanced Build Scripts**: Improved error handling and diagnostics
+* **Output**: `UEFIBinaries/BOOTX64.EFI` with complete EFI 1.1 support + Toro features
+* **Requirements**: Windows + Visual Studio 2022 + complete project transfer
+
+### 2. **EDK2 Build (Cross-Platform)**
+* **Cross-Platform**: Works on macOS, Linux, and Windows
+* **Pure EDK2 Shell**: Standard EDK2 shell with EFI 1.1 modifications (no Toro features)
+* **Traditional EDK2**: Uses standard EDK2 build system with EFI 1.1 modifications
+* **Immediate Build**: No Windows dependencies, builds directly from source
+* **Output**: `Build/Shell/RELEASE_*/X64/.../Shell.efi` with EFI 1.1 support
+* **Requirements**: Any platform with EDK2 build tools
+
+### 3. **Build Output Comparison**
+Both approaches produce **EFI 1.1 compatible shells** but with different feature sets:
+
+| **Feature** | **VisualUEFIShell (Toro)** | **EDK2 Shell** |
+|-------------|---------------------------|----------------|
+| EFI 1.1 Support | ✅ | ✅ |
+| Mac Pro 5,1 Compatibility | ✅ | ✅ |
+| Toro C Library | ✅ | ❌ |
+| Plugin System | ✅ | ❌ |
+| Enhanced Tools | ✅ | ❌ |
+| Cross-Platform | ❌ (Windows only) | ✅ |
+| Build System | Visual Studio | EDK2 |
+
 ## Howto
+
+### Quick Start Options:
+
+#### **Option A: VisualUEFIShell Build (Windows)** ⭐ RECOMMENDED
+```cmd
+# 1. Transfer complete UEFI-SHELL1.1 project to Windows
+# 2. Navigate to VisualUEFIShell directory
+cd C:\Path\To\UEFI-SHELL1.1\VisualUEFIShell
+
+# 3. Set up EDK2 environment
+..\EDK2\edksetup.bat
+
+# 4. Build EDK2 libraries (required for Visual Studio)
+cd ..\EDK2
+build -a X64 -t VS2019 -p MdePkg\MdePkg.dsc -b RELEASE
+
+# 5. Open VisualUEFIShell.sln in Visual Studio 2022
+# 6. Build → Build Solution (Ctrl+Shift+B)
+# Output: UEFIBinaries/BOOTX64.EFI
+```
+
+#### **Option B: EDK2 Build (Cross-Platform)**
+```bash
+# macOS/Linux - immediate build
+./build-edk2-efi11-isolated.sh
+
+# Windows - traditional EDK2 approach  
+edksetup.bat
+build -a X64 -t VS2019 -p ShellPkg\ShellPkg.dsc -b RELEASE
+# Output: Build/Shell/RELEASE_*/X64/.../Shell.efi
+```
+
+### Traditional Build Process (Windows):
 0. download project recursively
 1. run `LAUNCH.BAT` to start the session
 2. run `BUILD` (build.cmd), to run the traditional EDK2 build

@@ -74,7 +74,13 @@ UefiMain (
     Print (L"  Argc: %d\n", ShellInterface->Argc);
     if (ShellInterface->Argc > 0 && ShellInterface->Argv != NULL) {
       Print (L"  Argv[0]: %s\n", ShellInterface->Argv[0]);
+      if (ShellInterface->Argc > 1) {
+        Print (L"  Argv[1]: %s\n", ShellInterface->Argv[1]);
+      }
     }
+    Print (L"  ImageHandle: %p\n", ShellInterface->ImageHandle);
+    Print (L"  LoadedImage: %p\n", ShellInterface->Info);
+    Print (L"  EchoOn: %s\n", ShellInterface->EchoOn ? L"TRUE" : L"FALSE");
   }
   
   //
@@ -96,6 +102,26 @@ UefiMain (
     TestEnv = ShellEnvironment->GetEnv (L"path");
     Print (L"  PATH environment variable: %s\n", 
            (TestEnv != NULL) ? L"ACCESSIBLE" : L"NOT ACCESSIBLE");
+    if (TestEnv != NULL) {
+      FreePool (TestEnv);
+    }
+    
+    //
+    // Test directory functions
+    //
+    TestEnv = ShellEnvironment->GetCurDir (NULL);
+    Print (L"  Current directory: %s\n", 
+           (TestEnv != NULL) ? TestEnv : L"NOT ACCESSIBLE");
+    if (TestEnv != NULL) {
+      FreePool (TestEnv);
+    }
+    
+    //
+    // Test alias functions
+    //
+    TestEnv = ShellEnvironment->GetAlias (L"ls", NULL);
+    Print (L"  'ls' alias: %s\n", 
+           (TestEnv != NULL) ? TestEnv : L"NOT SET");
     if (TestEnv != NULL) {
       FreePool (TestEnv);
     }

@@ -10,8 +10,6 @@
 **/
 
 #include "Shell.h"
-#include "ShellLegacyProtocols.h"
-#include "ShellLegacyProtocols.h"
 
 //
 // Initialize the global structure
@@ -361,10 +359,9 @@ UefiMain (
   EFI_SIMPLE_TEXT_INPUT_PROTOCOL  *OldConIn;
   SPLIT_LIST                      *Split;
 
-  //
-  // EFI 1.1 Support: Allow all shell support levels for backward compatibility
-  // Original code blocked levels > 3 which prevented EFI 1.1 operation
-  //
+  if (PcdGet8 (PcdShellSupportLevel) > 3) {
+    return (EFI_UNSUPPORTED);
+  }
 
   //
   // Clear the screen
@@ -398,19 +395,12 @@ UefiMain (
   //
   // Check PCDs for optional features that are not implemented yet.
   //
-  // EFI 1.1 Support: Remove blocking check that prevented shell from running 
-  // when legacy protocol support was enabled. The original check returned
-  // EFI_UNSUPPORTED when PcdShellSupportOldProtocols was TRUE, which is the
-  // opposite of what we want for EFI 1.1 compatibility.
-  // 
-  // Original blocking code removed:
-  // if (  PcdGetBool (PcdShellSupportOldProtocols)
-  //    || !FeaturePcdGet (PcdShellRequireHiiPlatform)  
-  //    || FeaturePcdGet (PcdShellSupportFrameworkHii)
-  //       )
-  // {
-  //   return (EFI_UNSUPPORTED);
-  // }
+  if (  !FeaturePcdGet (PcdShellRequireHiiPlatform)
+     || FeaturePcdGet (PcdShellSupportFrameworkHii)
+        )
+  {
+    return (EFI_UNSUPPORTED);
+  }
 
   //
   // turn off the watchdog timer
@@ -464,23 +454,22 @@ UefiMain (
     ASSERT (ShellInfoObject.NewEfiShellProtocol != NULL);
 
     //
-    // Initialize legacy EFI 1.1 protocol support
-    //
-    if (PcdGetBool (PcdShellSupportOldProtocols) || IsEfi11Environment ()) {
-      DEBUG ((DEBUG_INFO, "Shell: Initializing EFI 1.1 legacy protocol support\n"));
-      Status = InstallShellEnvironmentProtocol ();
-      if (EFI_ERROR (Status)) {
-        DEBUG ((DEBUG_WARN, "Shell: Failed to install legacy protocols - %r\n", Status));
-      } else {
-        DEBUG ((DEBUG_INFO, "Shell: Legacy protocols installed successfully\n"));
-      }
-    }
-
-    //
     // Now initialize the shell library (it requires Shell Parameters protocol)
     //
     Status = ShellInitialize ();
     ASSERT_EFI_ERROR (Status);
+
+    //
+    // Initialize EFI 1.1 legacy protocol support for backward compatibility
+    //
+    if (PcdGetBool (PcdShellSupportOldProtocols)) {
+      Status = InitializeShellLegacyProtocols ();
+      if (EFI_ERROR (Status)) {
+        DEBUG ((DEBUG_WARN, "Warning: Failed to initialize EFI 1.1 legacy protocols: %r\n", Status));
+      } else {
+        DEBUG ((DEBUG_INFO, "EFI 1.1 legacy protocols initialized successfully\n"));
+      }
+    }
 
     Status = CommandInit ();
     ASSERT_EFI_ERROR (Status);
@@ -729,14 +718,6 @@ FreeResources:
     DEBUG_CODE (
       ShellInfoObject.NewEfiShellProtocol = NULL;
       );
-  }
-
-  //
-  // Cleanup legacy EFI 1.1 protocol support
-  //
-  if (PcdGetBool (PcdShellSupportOldProtocols) || IsEfi11Environment ()) {
-    DEBUG ((DEBUG_INFO, "Shell: Cleaning up EFI 1.1 legacy protocol support\n"));
-    CleanupLegacyShellSupport ();
   }
 
   if (!IsListEmpty (&ShellInfoObject.BufferToFreeList.Link)) {
@@ -1453,7 +1434,7 @@ DoShellPrompt (
   //
   // Get screen setting to decide size of the command line buffer
   //
-  gST->ConOut->QueryMode (gST->ConOut, gST->ConOut->Mode->Mode, &Column, &Row);
+  gST->ConOut->QueryMode (gST->ConOut, gST->ConOut->Mode, &Column, &Row);
   BufferSize = Column * Row * sizeof (CHAR16);
   CmdLine    = AllocateZeroPool (BufferSize);
   if (CmdLine == NULL) {
@@ -2455,6 +2436,7 @@ ProcessCommandLineToFinal (
   }
 
   ASSERT (*CmdLine != NULL);
+
   TrimSpaces (CmdLine);
 
   //
@@ -2841,7 +2823,7 @@ RunShellCommand (
   //
   for (TempWalker = CleanOriginal; TempWalker != NULL && *TempWalker != CHAR_NULL; TempWalker++) {
     if (*TempWalker == L'^') {
-      if (*(TempWalker + 1) == L'#') {
+      if ( *(TempWalker + 1) == L'#') {
         TempWalker++;
       }
     } else if (*TempWalker == L'#') {

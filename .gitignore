@@ -18,7 +18,6 @@ $trash/
 
 # Development tools and downloads - should not be committed
 /MYDOWNLOADS/
-*.exe
 *.zip
 *.dll
 *.lib

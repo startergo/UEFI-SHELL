@@ -1,0 +1,37 @@
+EFI 1.1 Legacy Protocol Support Patches for EDK2
+Version: 1.0
+Date: July 15, 2025
+Target: UEFI Shell with EFI 1.1 backward compatibility
+
+Components:
+- EFI_SHELL_ENVIRONMENT_PROTOCOL (EFI 1.1)
+- EFI_SHELL_INTERFACE_PROTOCOL 
+- EFI_SHELL_ENVIRONMENT2_PROTOCOL
+- Legacy protocol wrappers
+- MacPro5,1 compatibility support
+
+Files Modified:
+- ShellPkg/Application/Shell/Shell.c
+- ShellPkg/Application/Shell/Shell.h  
+- ShellPkg/Application/Shell/Shell.inf
+- ShellPkg/ShellPkg.dec
+
+Files Added:
+- ShellPkg/Application/Shell/ShellLegacyProtocols.c
+- ShellPkg/Application/Shell/ShellLegacyProtocols.h
+- ShellPkg/Include/Protocol/Efi11ShellEnvironment.h
+- ShellPkg/Include/Protocol/Efi11ShellInterface.h
+
+Installation:
+Run ./apply-patches.sh <EDK2_PATH> to install
+Run ./remove-patches.sh <EDK2_PATH> [BACKUP] to uninstall
+
+Requirements:
+- EDK2 source tree
+- Set PcdShellSupportOldProtocols=TRUE in platform DSC
+
+Compatibility:
+- EFI 1.1 shell applications
+- Legacy shell scripts
+- Mac Pro 5,1 (2010-2012) firmware
+- Older UEFI implementations requiring EFI 1.1 protocols

@@ -19,9 +19,9 @@
 #include <Protocol/LoadedImage.h>
 
 //
-// Global GUIDs for legacy protocols 
+// Global GUIDs for legacy protocols (declared in ShellPkg.dec)
 //
-GLOBAL_REMOVE_IF_UNREFERENCED EFI_GUID gEfiShellEnvironmentGuid = EFI_SHELL_ENVIRONMENT_GUID;
+extern EFI_GUID gEfiShellEnvironmentGuid;
 
 //
 // Global instances of legacy protocols

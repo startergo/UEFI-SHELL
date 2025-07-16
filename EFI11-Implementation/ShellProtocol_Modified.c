@@ -10,15 +10,7 @@
 **/
 
 #include "Shell.h"
-#include "ShellLegacyProtocols.h"
-#define NCDETRACE/* REMOVE TO ENABLE TRACES */
-#define _CRT_SECURE_NO_WARNINGS
-#define _NO_CRT_STDIO_INLINE
-extern char* _strefierror(EFI_STATUS);
-extern char* _gPLUGINSTART;                           // .COFF plugin address im memory
-extern size_t _gPLUGINSIZE;                            // .COFF plugin size
-#include <stdio.h>
-#include <cde.h>
+
 #define INIT_NAME_BUFFER_SIZE  128
 
 /**
@@ -733,10 +725,11 @@ EfiShellGetDeviceName (
         continue;
       }
 
-      Lang   = GetBestLanguageForDriver (CompName2->SupportedLanguages, Language, FALSE);
+      Lang = GetBestLanguageForDriver (CompName2->SupportedLanguages, Language, FALSE);
       if (Lang == NULL) {
         continue;
       }
+
       Status = CompName2->GetControllerName (CompName2, DeviceHandle, NULL, Lang, &DeviceNameToReturn);
       FreePool (Lang);
       Lang = NULL;
@@ -784,10 +777,11 @@ EfiShellGetDeviceName (
               continue;
             }
 
-            Lang   = GetBestLanguageForDriver (CompName2->SupportedLanguages, Language, FALSE);
+            Lang = GetBestLanguageForDriver (CompName2->SupportedLanguages, Language, FALSE);
             if (Lang == NULL) {
               continue;
             }
+
             Status = CompName2->GetControllerName (CompName2, ParentControllerBuffer[LoopVar], DeviceHandle, Lang, &DeviceNameToReturn);
             FreePool (Lang);
             Lang = NULL;
@@ -1508,7 +1502,7 @@ InternalShellExecuteDevicePath (
   if (ParentImageHandle == NULL) {
     return (EFI_INVALID_PARAMETER);
   }
-  CDETRACE((TRCINF(1)"-->\n"));
+
   InitializeListHead (&OrigEnvs);
   ZeroMem (&ShellParamsProtocol, sizeof (EFI_SHELL_PARAMETERS_PROTOCOL));
 
@@ -1529,19 +1523,15 @@ InternalShellExecuteDevicePath (
   // Load the image with:
   // FALSE - not from boot manager and NULL, 0 being not already in memory
   //
-  CDETRACE((CDEINF(1)"-->\n"));
   Status = gBS->LoadImage (
                   FALSE,
                   *ParentImageHandle,
                   (EFI_DEVICE_PATH_PROTOCOL *)DevicePath,
-                  NULL == _gPLUGINSTART ? NULL : _gPLUGINSTART,
-                  NULL == _gPLUGINSTART ? 0 : _gPLUGINSIZE,
+                  NULL,
+                  0,
                   &NewHandle
                   );
-      
-    _gPLUGINSTART = NULL;
 
-  CDETRACE((TRCINF(1)"-->Status %s\n", _strefierror(Status)));
   if (EFI_ERROR (Status)) {
     if (NewHandle != NULL) {
       gBS->UnloadImage (NewHandle);
@@ -1569,7 +1559,7 @@ InternalShellExecuteDevicePath (
         -1,
         -1,
         NULL,
-        STRING_TOKEN (STR_SHELL_IMAGE_NOT_APP),
+        STRING_TOKEN (1), // STR_SHELL_IMAGE_NOT_APP
         ShellInfoObject.HiiHandle
         );
       goto UnloadImage;
@@ -1634,22 +1624,7 @@ InternalShellExecuteDevicePath (
     Status = gBS->InstallProtocolInterface (&NewHandle, &gEfiShellParametersProtocolGuid, EFI_NATIVE_INTERFACE, &ShellParamsProtocol);
     ASSERT_EFI_ERROR (Status);
 
-    //
-    // Initialize and install ShellInterface protocol on the new image for compatibility if PcdGetBool(PcdShellSupportOldProtocols)
-    //
-    if (PcdGetBool (PcdShellSupportOldProtocols) || IsEfi11Environment ()) {
-      DEBUG ((DEBUG_INFO, "Shell: Installing ShellInterface protocol for EFI 1.1 compatibility\n"));
-      Status = InstallShellInterfaceProtocol (
-                 NewHandle,
-                 ShellParamsProtocol.Argv,
-                 ShellParamsProtocol.Argc
-                 );
-      if (EFI_ERROR (Status)) {
-        DEBUG ((DEBUG_WARN, "Shell: Failed to install ShellInterface protocol - %r\n", Status));
-      } else {
-        DEBUG ((DEBUG_INFO, "Shell: ShellInterface protocol installed successfully\n"));
-      }
-    }
+    /// @todo initialize and install ShellInterface protocol on the new image for compatibility if - PcdGetBool(PcdShellSupportOldProtocols)
 
     //
     // now start the image and if the caller wanted the return code pass it to them...
@@ -2781,6 +2756,7 @@ EfiShellOpenFileList (
     if (CurDir == NULL) {
       return EFI_NOT_FOUND;
     }
+
     ASSERT ((Path2 == NULL && Path2Size == 0) || (Path2 != NULL));
     StrnCatGrow (&Path2, &Path2Size, CurDir, 0);
     StrnCatGrow (&Path2, &Path2Size, L"\\", 0);
@@ -2924,6 +2900,7 @@ EfiShellGetEnvEx (
         if (Buffer == NULL) {
           return NULL;
         }
+
         Status = SHELL_GET_ENVIRONMENT_VARIABLE_AND_ATTRIBUTES (Name, Attributes, &Size, Buffer);
       }
 
@@ -3912,21 +3889,9 @@ CreatePopulateInstallShellProtocol (
                     );
   }
 
-  if (PcdGetBool (PcdShellSupportOldProtocols) || IsEfi11Environment ()) {
-    //
-    // Support ShellEnvironment2 protocol for EFI 1.1 compatibility
-    //
-    DEBUG ((DEBUG_INFO, "Shell: Installing ShellEnvironment protocols for EFI 1.1 compatibility\n"));
-    Status = InstallShellEnvironmentProtocol ();
-    if (EFI_ERROR (Status)) {
-      DEBUG ((DEBUG_WARN, "Shell: Failed to install ShellEnvironment protocols - %r\n", Status));
-    } else {
-      DEBUG ((DEBUG_INFO, "Shell: ShellEnvironment protocols installed successfully\n"));
-    }
-    
-    //
-    // We support both ShellEnvironment and ShellEnvironment2 for maximum compatibility
-    //
+  if (FALSE) {
+    /// @todo support ShellEnvironment2
+    /// @todo do we need to support ShellEnvironment (not ShellEnvironment2) also?
   }
 
   if (!EFI_ERROR (Status)) {
@@ -4032,7 +3997,7 @@ NotificationFunction (
   IN EFI_KEY_DATA  *KeyData
   )
 {
-  if ((((KeyData->Key.UnicodeChar == L'c') || (KeyData->Key.UnicodeChar == L'C')) &&
+  if (((KeyData->Key.UnicodeChar == L'c') &&
        ((KeyData->KeyState.KeyShiftState == (EFI_SHIFT_STATE_VALID|EFI_LEFT_CONTROL_PRESSED)) || (KeyData->KeyState.KeyShiftState  == (EFI_SHIFT_STATE_VALID|EFI_RIGHT_CONTROL_PRESSED)))) ||
       (KeyData->Key.UnicodeChar == 3)
       )
@@ -4081,7 +4046,7 @@ InernalEfiShellStartMonitor (
       -1,
       -1,
       NULL,
-      STRING_TOKEN (STR_SHELL_NO_IN_EX),
+      STRING_TOKEN (1), // STR_SHELL_NO_IN_EX
       ShellInfoObject.HiiHandle
       );
     return (EFI_SUCCESS);
@@ -4134,55 +4099,5 @@ InernalEfiShellStartMonitor (
                          );
   }
 
-  if (1)
-  {
-      static VOID* CtrlCNotifyHandle5; ///< The NotifyHandle returned from SimpleTextInputEx.RegisterKeyNotify.
-      static VOID* CtrlCNotifyHandle6; ///< The NotifyHandle returned from SimpleTextInputEx.RegisterKeyNotify.
-      static VOID* CtrlCNotifyHandle7; ///< The NotifyHandle returned from SimpleTextInputEx.RegisterKeyNotify.
-      static VOID* CtrlCNotifyHandle8; ///< The NotifyHandle returned from SimpleTextInputEx.RegisterKeyNotify.
-
-      KeyData.KeyState.KeyToggleState = 0;
-      KeyData.Key.ScanCode = 0;
-      KeyData.Key.UnicodeChar = L'C';
-
-      KeyData.KeyState.KeyShiftState = EFI_SHIFT_STATE_VALID | EFI_LEFT_CONTROL_PRESSED;
-      Status = SimpleEx->RegisterKeyNotify(
-          SimpleEx,
-          &KeyData,
-          NotificationFunction,
-          &CtrlCNotifyHandle5
-      );
-
-      KeyData.KeyState.KeyShiftState = EFI_SHIFT_STATE_VALID | EFI_RIGHT_CONTROL_PRESSED;
-      if (!EFI_ERROR(Status)) {
-          Status = SimpleEx->RegisterKeyNotify(
-              SimpleEx,
-              &KeyData,
-              NotificationFunction,
-              &CtrlCNotifyHandle6
-          );
-      }
-
-      KeyData.KeyState.KeyShiftState = EFI_SHIFT_STATE_VALID | EFI_LEFT_CONTROL_PRESSED;
-      KeyData.Key.UnicodeChar = 3;
-      if (!EFI_ERROR(Status)) {
-          Status = SimpleEx->RegisterKeyNotify(
-              SimpleEx,
-              &KeyData,
-              NotificationFunction,
-              &CtrlCNotifyHandle7
-          );
-      }
-
-      KeyData.KeyState.KeyShiftState = EFI_SHIFT_STATE_VALID | EFI_RIGHT_CONTROL_PRESSED;
-      if (!EFI_ERROR(Status)) {
-          Status = SimpleEx->RegisterKeyNotify(
-              SimpleEx,
-              &KeyData,
-              NotificationFunction,
-              &CtrlCNotifyHandle8
-          );
-      }
-  }
   return (Status);
 }

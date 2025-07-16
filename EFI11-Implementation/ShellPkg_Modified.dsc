@@ -78,10 +78,12 @@
   # Enable support for older EFI shell applications (e.g., 2010 Mac Pro cMP5,1)
   #
   gEfiShellPkgTokenSpaceGuid.PcdShellSupportOldProtocols|TRUE
+  gEfiShellPkgTokenSpaceGuid.PcdShellSupportLevel|3
 
 [PcdsFeatureFlag]
   gEfiShellPkgTokenSpaceGuid.PcdShellRequireHiiPlatform|FALSE
   gEfiShellPkgTokenSpaceGuid.PcdShellSupportFrameworkHii|TRUE
+  gEfiShellPkgTokenSpaceGuid.PcdShellForceConsole|TRUE
 
 [Components]
   #
